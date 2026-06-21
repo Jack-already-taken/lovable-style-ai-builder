@@ -1,4 +1,5 @@
-import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react';
+import type { ReactNode } from 'react';
+import { RedirectToSignIn, Show } from '@clerk/react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Header } from './components/Header';
 import { BuilderPage } from './pages/BuilderPage';
@@ -6,14 +7,11 @@ import { LandingPage } from './pages/LandingPage';
 import { PricingPage } from './pages/PricingPage';
 import { HistoryPage } from './pages/HistoryPage';
 
-function Protected({ children }: { children: React.ReactNode }) {
+function Protected({ children }: { children: ReactNode }) {
   return (
-    <>
-      <SignedIn>{children}</SignedIn>
-      <SignedOut>
-        <RedirectToSignIn />
-      </SignedOut>
-    </>
+    <Show when="signed-in" fallback={<RedirectToSignIn />}>
+      {children}
+    </Show>
   );
 }
 

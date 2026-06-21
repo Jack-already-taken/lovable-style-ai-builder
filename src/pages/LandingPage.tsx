@@ -1,4 +1,4 @@
-import { SignedIn, SignedOut, SignUpButton } from '@clerk/clerk-react';
+import { Show, SignUpButton } from '@clerk/react';
 import { ArrowRight, Code2, Eye, GitBranch, Rocket } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -14,18 +14,18 @@ export function LandingPage() {
             auth, Supabase history, Stripe subscription checkout, and Vercel deployment.
           </p>
           <div className="hero-actions">
-            <SignedIn>
+            <Show when="signed-in">
               <Link className="button button-primary" to="/app">
                 Open builder <ArrowRight size={18} />
               </Link>
-            </SignedIn>
-            <SignedOut>
+            </Show>
+            <Show when="signed-out">
               <SignUpButton mode="modal">
                 <button className="button button-primary">
                   Start building <ArrowRight size={18} />
                 </button>
               </SignUpButton>
-            </SignedOut>
+            </Show>
             <Link className="button button-secondary" to="/pricing">View pricing</Link>
           </div>
         </div>

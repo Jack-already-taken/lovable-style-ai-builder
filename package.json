@@ -5,28 +5,33 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "deploy": "vercel --prod",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "latest",
-    "@clerk/backend": "latest",
-    "@clerk/clerk-react": "latest",
-    "@supabase/supabase-js": "latest",
-    "@vitejs/plugin-react": "latest",
-    "@vercel/node": "latest",
-    "clsx": "latest",
-    "lucide-react": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "react-router-dom": "latest",
-    "stripe": "latest",
-    "zod": "latest"
+    "@anthropic-ai/sdk": "0.105.0",
+    "@clerk/backend": "3.8.2",
+    "@clerk/react": "6.10.4",
+    "@supabase/supabase-js": "2.108.2",
+    "clsx": "2.1.1",
+    "lucide-react": "1.21.0",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "react-router-dom": "7.18.0",
+    "stripe": "22.2.2",
+    "zod": "4.4.3"
   },
   "devDependencies": {
-    "typescript": "latest",
-    "vite": "latest"
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@vercel/node": "5.8.17",
+    "@vitejs/plugin-react": "6.0.2",
+    "typescript": "6.0.3",
+    "vite": "8.0.16"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }

@@ -41,13 +41,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (event.type === 'customer.subscription.deleted' || event.type === 'customer.subscription.updated') {
       const subscription = event.data.object as Stripe.Subscription;
       const customerId = String(subscription.customer);
+      const primaryItem = subscription.items.data[0];
+      const periodEnd = primaryItem?.current_period_end;
+
       await supabase
         .from('billing_customers')
         .update({
           subscription_status: subscription.status,
-          price_id: subscription.items.data[0]?.price.id ?? null,
-          current_period_end: subscription.current_period_end
-            ? new Date(subscription.current_period_end * 1000).toISOString()
+          price_id: primaryItem?.price.id ?? null,
+          current_period_end: periodEnd
+            ? new Date(periodEnd * 1000).toISOString()
             : null,
           updated_at: new Date().toISOString()
         })

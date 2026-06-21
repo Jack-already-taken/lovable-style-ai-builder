@@ -1,4 +1,4 @@
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
+import { Show, SignInButton, UserButton } from '@clerk/react';
 import { Link, NavLink } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 
@@ -11,16 +11,16 @@ export function Header() {
       </Link>
       <nav className="nav-links">
         <NavLink to="/pricing">Pricing</NavLink>
-        <SignedIn>
+        <Show when="signed-in">
           <NavLink to="/app">Builder</NavLink>
           <NavLink to="/history">History</NavLink>
-          <UserButton afterSignOutUrl="/" />
-        </SignedIn>
-        <SignedOut>
+          <UserButton />
+        </Show>
+        <Show when="signed-out">
           <SignInButton mode="modal">
             <button className="button button-secondary">Sign in</button>
           </SignInButton>
-        </SignedOut>
+        </Show>
       </nav>
     </header>
   );

@@ -1,4 +1,4 @@
-import { useAuth, SignedIn, SignedOut, SignInButton } from '@clerk/clerk-react';
+import { Show, SignInButton, useAuth } from '@clerk/react';
 import { CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -35,16 +35,16 @@ export function PricingPage() {
           <li><CheckCircle2 size={18} /> Preview + code split view</li>
           <li><CheckCircle2 size={18} /> Future GitHub export hook</li>
         </ul>
-        <SignedIn>
+        <Show when="signed-in">
           <button className="button button-primary full" onClick={startCheckout} disabled={loading}>
             {loading ? 'Opening Stripe...' : 'Subscribe with Stripe'}
           </button>
-        </SignedIn>
-        <SignedOut>
+        </Show>
+        <Show when="signed-out">
           <SignInButton mode="modal">
             <button className="button button-primary full">Sign in to subscribe</button>
           </SignInButton>
-        </SignedOut>
+        </Show>
       </section>
     </main>
   );

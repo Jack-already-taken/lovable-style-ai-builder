@@ -1,4 +1,4 @@
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '@clerk/react';
 import { useState } from 'react';
 import { CodePanel } from '../components/CodePanel';
 import { PaywallNotice } from '../components/PaywallNotice';

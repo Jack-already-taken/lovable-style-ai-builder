@@ -5,7 +5,7 @@ A GitHub-ready MVP skeleton for an AI web app builder. It is inspired by the pro
 ## Stack
 
 - Frontend: Vite + React + TypeScript
-- Auth: Clerk
+- Auth: Clerk React SDK (`@clerk/react`)
 - AI generation: Anthropic TypeScript SDK, called server-side only
 - Payments: Stripe Checkout subscription, $20/mo price placeholder
 - Database: Supabase Postgres
@@ -31,14 +31,22 @@ A GitHub-ready MVP skeleton for an AI web app builder. It is inspired by the pro
 ```bash
 npm install
 cp .env.example .env.local
-npm run dev
+npm run build
+npx vercel dev --listen 3000
 ```
 
-Vite runs the frontend locally. For local serverless API testing, install Vercel CLI and run:
+On Windows PowerShell:
 
-```bash
-npx vercel dev
+```powershell
+npm install
+Copy-Item .env.example .env.local
+npm run build
+npx vercel dev --listen 3000
 ```
+
+Open `http://localhost:3000`. Node.js 22 is the supported runtime for this repository.
+
+Vite alone can run the frontend, but the full demo needs the `/api` functions. Use `npx vercel dev --listen 3000` for normal development.
 
 ## 2. Environment variables
 
@@ -75,7 +83,7 @@ Never expose `ANTHROPIC_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KE
 1. Create a Clerk application.
 2. Copy the publishable key to `VITE_CLERK_PUBLISHABLE_KEY`.
 3. Copy the secret key to `CLERK_SECRET_KEY`.
-4. Add your deployed domain and localhost as allowed origins if needed.
+4. Add your deployed domain and localhost as allowed origins if needed. The frontend uses the current `@clerk/react` SDK.
 
 ## 5. Anthropic
 
@@ -104,7 +112,7 @@ npx vercel
 npx vercel --prod
 ```
 
-Set every environment variable in Vercel before production generation and checkout.
+Set Clerk, Anthropic, and Supabase variables before testing generation. Stripe variables are optional until checkout testing. The AI generation function is configured for a maximum duration of 300 seconds.
 
 ## 8. Namecheap DNS checklist
 
