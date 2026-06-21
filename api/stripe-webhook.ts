@@ -1,65 +1,64 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
-import { getSupabaseAdmin } from '../lib/supabaseAdmin';
-import { readRawBody } from '../lib/readRawBody';
+import { handleApiError, ApiError } from '../lib/errors';
 import { json, methodNotAllowed } from '../lib/http';
+import { readRawBody } from '../lib/readRawBody';
+import { getSupabaseAdmin } from '../lib/supabaseAdmin';
 
-export const config = {
-  api: {
-    bodyParser: false
-  }
-};
+export const config = { api: { bodyParser: false } };
+
+function subscriptionRecord(subscription: Stripe.Subscription) {
+  const item = subscription.items.data[0];
+  return {
+    stripe_customer_id: String(subscription.customer),
+    stripe_subscription_id: subscription.id,
+    subscription_status: subscription.status,
+    price_id: item?.price.id || null,
+    current_period_end: item?.current_period_end ? new Date(item.current_period_end * 1000).toISOString() : null,
+    updated_at: new Date().toISOString()
+  };
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
 
   try {
-    if (!process.env.STRIPE_SECRET_KEY) throw new Error('Missing STRIPE_SECRET_KEY');
-    if (!process.env.STRIPE_WEBHOOK_SECRET) throw new Error('Missing STRIPE_WEBHOOK_SECRET');
+    if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
+      throw new ApiError(500, 'Stripe webhook environment variables are missing.');
+    }
+    const signature = req.headers['stripe-signature'];
+    if (!signature || Array.isArray(signature)) throw new ApiError(400, 'Missing Stripe signature.');
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-    const signature = req.headers['stripe-signature'];
-    if (!signature || Array.isArray(signature)) throw new Error('Missing Stripe signature');
-
-    const rawBody = await readRawBody(req);
-    const event = stripe.webhooks.constructEvent(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET);
+    const event = stripe.webhooks.constructEvent(await readRawBody(req), signature, process.env.STRIPE_WEBHOOK_SECRET);
     const supabase = getSupabaseAdmin();
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
       const clerkUserId = session.metadata?.clerk_user_id || session.client_reference_id;
-      if (clerkUserId && session.customer) {
-        await supabase.from('billing_customers').upsert({
+      if (clerkUserId && session.subscription) {
+        const subscription = await stripe.subscriptions.retrieve(String(session.subscription));
+        const { error } = await supabase.from('billing_customers').upsert({
           clerk_user_id: clerkUserId,
-          stripe_customer_id: String(session.customer),
-          subscription_status: 'active',
-          updated_at: new Date().toISOString()
-        });
+          ...subscriptionRecord(subscription)
+        }, { onConflict: 'clerk_user_id' });
+        if (error) throw error;
       }
     }
 
-    if (event.type === 'customer.subscription.deleted' || event.type === 'customer.subscription.updated') {
+    if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
       const subscription = event.data.object as Stripe.Subscription;
-      const customerId = String(subscription.customer);
-      const primaryItem = subscription.items.data[0];
-      const periodEnd = primaryItem?.current_period_end;
-
-      await supabase
-        .from('billing_customers')
-        .update({
-          subscription_status: subscription.status,
-          price_id: primaryItem?.price.id ?? null,
-          current_period_end: periodEnd
-            ? new Date(periodEnd * 1000).toISOString()
-            : null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('stripe_customer_id', customerId);
+      const clerkUserId = subscription.metadata?.clerk_user_id;
+      const record = subscriptionRecord(subscription);
+      const query = clerkUserId
+        ? supabase.from('billing_customers').upsert({ clerk_user_id: clerkUserId, ...record }, { onConflict: 'clerk_user_id' })
+        : supabase.from('billing_customers').update(record).eq('stripe_customer_id', record.stripe_customer_id);
+      const { error } = await query;
+      if (error) throw error;
     }
 
     return json(res, 200, { received: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown webhook error';
-    return json(res, 400, { error: message });
+    return handleApiError(res, error);
   }
 }

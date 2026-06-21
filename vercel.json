@@ -4,18 +4,12 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "functions": {
-    "api/generate.ts": {
-      "maxDuration": 300
-    }
+    "api/generate.ts": { "maxDuration": 300 },
+    "api/deploy.ts": { "maxDuration": 60 },
+    "api/export-github.ts": { "maxDuration": 60 }
   },
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
